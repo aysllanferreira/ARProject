@@ -1,62 +1,59 @@
+/* eslint-disable no-undef */
 
+const scene = new THREE.Scene()
+const camera = new THREE.Camera()
+scene.add(camera)
 
-			const scene = new THREE.Scene();
-			const camera = new THREE.Camera();
-      scene.add(camera);
+const renderer = new THREE.WebGLRenderer({
+  antialias: true,
+  alpha: true
+})
+renderer.setSize(window.innerWidth, window.innerHeight)
+document.body.appendChild(renderer.domElement)
 
+const ArToolkitSource = new THREEx.ArToolkitSource({
+  sourceType: 'webcam'
+})
 
-			const renderer = new THREE.WebGLRenderer({
-        antialias: true,
-        alpha: true
-      });
-			renderer.setSize( window.innerWidth, window.innerHeight );
-			document.body.appendChild( renderer.domElement );
+ArToolkitSource.init(function () {
+  setTimeout(function () {
+    ArToolkitSource.onResizeElement()
+    ArToolkitSource.copyElementSizeTo(renderer.domElement)
+  }, 2000)
+})
 
-      var ArToolkitSource = new THREEx.ArToolkitSource({
-        sourceType : 'webcam'
-      });
+const ArToolkitContext = new THREEx.ArToolkitContext({
+  cameraParametersUrl: 'camera_para.dat',
+  detectionMode: 'color_and_matrix'
+})
 
-      ArToolkitSource.init(function () {
-        setTimeout(function () {
-          ArToolkitSource.onResizeElement();
-          ArToolkitSource.copyElementSizeTo(renderer.domElement);
-        }, 2000);
-      });
+ArToolkitContext.init(function () {
+  camera.projectionMatrix.copy(ArToolkitContext.getProjectionMatrix())
+})
 
-      var ArToolkitContext = new THREEx.ArToolkitContext({
-        cameraParametersUrl: 'camera_para.dat',
-        detectionMode: 'color_and_matrix',
-      });
+const ArMarkerControls = new THREEx.ArMarkerControls(ArToolkitContext, camera, {
+  type: 'pattern',
+  patternUrl: './pattern-marker.patt',
+  changeMatrixMode: 'cameraTransformMatrix'
+})
 
-      ArToolkitContext.init(function() {
-        camera.projectionMatrix.copy(ArToolkitContext.getProjectionMatrix());
-      });
+scene.visible = false
 
-      var ArMarkerControls = new THREEx.ArMarkerControls(ArToolkitContext, camera, {
-        type: 'pattern',
-        patternUrl: './pattern-marker.patt',
-        changeMatrixMode: 'cameraTransformMatrix'
-      });
+const geometry = new THREE.CubeGeometry(1, 1, 1)
+const material = new THREE.MeshNormalMaterial({
+  transparent: true,
+  opacity: 0.5,
+  side: THREE.DoubleSide
+})
+const cube = new THREE.Mesh(geometry, material)
+cube.position.y = geometry.parameters.height / 2
+scene.add(cube)
 
-      scene.visible = false;
+function animate () {
+  requestAnimationFrame(animate)
+  ArToolkitContext.update(ArToolkitSource.domElement)
+  scene.visible = camera.visible
+  renderer.render(scene, camera)
+}
 
-			const geometry = new THREE.CubeGeometry( 1, 1, 1 );
-			const material = new THREE.MeshNormalMaterial( { 
-        transparent: true,
-        opacity: 0.5,
-        side: THREE.DoubleSide
-       } );
-			const cube = new THREE.Mesh( geometry, material );
-      cube.position.y = geometry.parameters.height / 2;
-			scene.add( cube );
-
-		
-
-			function animate() {
-				requestAnimationFrame( animate );
-        ArToolkitContext.update(ArToolkitSource.domElement);
-        scene.visible = camera.visible;
-				renderer.render( scene, camera );
-			}
-
-			animate();
+animate()
