@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 
 const scene = new THREE.Scene()
 const camera = new THREE.Camera()
